@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import sys
+import os
 import json
 import re
 import subprocess
@@ -23,8 +24,13 @@ Payload:
 }
 """
 
-haproxy_cfg_file = '/etc/haproxy/haproxy.cfg'
+try:
+    haproxy_cfg_file = sys.argv[1]
+except IndexError:
+    haproxy_cfg_file = '/etc/haproxy/haproxy.cfg'
 
+if not os.path.exists(haproxy_cfg_file):
+    sys.exit(1)
 
 def get_content():
     fd = open(haproxy_cfg_file, 'r')
