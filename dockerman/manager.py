@@ -36,6 +36,11 @@ class Manager(object):
         except RuntimeError as e:
             return fail(e)
 
+        if 'version' in definition:
+            del definition['version']
+        if 'attributes' in definition:
+            del definition['attributes']
+
         d = self.client.create_container(**definition)
 
         def success(result):
