@@ -22,10 +22,10 @@ class BeginningPrinter(protocol.Protocol):
         self.finished.callback(None)
 
 
-def streaming(url, callback, headers={}):
+def streaming(url, callback, method='GET', headers={}):
     agent = Agent(reactor)
     d = agent.request(
-        'GET',
+        method,
         url,
         Headers(headers),
         None)

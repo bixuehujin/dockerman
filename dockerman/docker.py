@@ -10,7 +10,8 @@ from twisted.internet.defer import succeed, fail
 def dict2query(d):
     query = ''
     for key in d.keys():
-        query += str(key) + '=' + str(d[key]) + "&"
+        if d[key] is not None:
+            query += str(key) + '=' + str(d[key]) + "&"
     return query
 
 
@@ -28,9 +29,14 @@ class Client(object):
 
         def cb_success(response):
             if response.code == 201 or response.code == 200 or response.code == 204:
-                return succeed(json.loads(response.body) if response.body is not None else None)
+                if response.body.startswith('{"status":"Pulling repository'):
+                    if response.body.rfind('{"errorDetail":{"') >= 0:
+                        return fail(Exception(response.body))
+                    else:
+                        return succeed(True)
+                else:
+                    return succeed(json.loads(response.body) if response.body is not None else None)
             else:
-                print(response.body)
                 return fail(Exception(response.body))
 
         d.addCallback(cb_success)
@@ -115,6 +121,16 @@ class Client(object):
             'force': force
         })
         d = http.delete(url)
+        return self._resolve_response(d)
+
+    def pull_image(self, name, tag=None):
+        kw = {
+            'fromImage': name,
+            'tag': tag
+        }
+        url = self._normalizeUrl() + '/images/create?' + dict2query(kw)
+        #http.streaming(url, callback, method='POST')
+        d = http.post(url)
         return self._resolve_response(d)
 
     def subscribe(self, callback):

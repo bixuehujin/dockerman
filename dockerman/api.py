@@ -7,7 +7,6 @@ from twisted.web.resource import Resource
 from twisted.web.server import NOT_DONE_YET
 from twisted.python.failure import Failure
 
-
 """
 API
 
@@ -56,6 +55,7 @@ class Root(BaseResource):
 
         self.putChild('services', ServiceList(self.application))
         self.putChild('events', EventList(self.application))
+        self.putChild('images', ImageList(self.application))
 
 
 class ServiceList(BaseResource):
@@ -123,4 +123,24 @@ class EventList(BaseResource):
 
     def render_GET(self, request):
         return "<html>Hello, GET /events!</html>"
+
+
+class ImageList(BaseResource):
+
+    def getChild(self, path, request):
+        return Image(self.application, path)
+
+    def render_POST(self, request):
+        data = json.load(request.content)
+
+        d = self.application.client.pull_image(**data)
+        self.handle_deferred(d, request, code_on_success=201)
+        return NOT_DONE_YET
+
+
+class Image(BaseResource):
+
+    def render_GET(self, request):
+        return ''
+
 
